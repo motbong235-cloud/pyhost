@@ -558,6 +558,27 @@ def new_project():
     if requirements.strip():
         write_project_file(pid, "requirements.txt", requirements.strip() + "\n")
         files["requirements.txt"] = {"size": len(requirements)}
+
+    for f in request.files.getlist("files"):
+        if not f or not f.filename:
+            continue
+        rel = safe_name(Path(f.filename).name)
+        if not rel or len(files) >= limits["files"]:
+            continue
+        raw = f.read()
+        if len(raw) > max_file:
+            continue
+        try:
+            body = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            body = raw.decode("utf-8", errors="replace")
+        info = {"size": len(body)}
+        if rel.endswith(".py"):
+            ok, err = syntax_check_python(body)
+            info["syntax_ok"] = ok
+            info["syntax_error"] = err
+        write_project_file(pid, rel, body)
+        files[rel] = info
     proc = "web: gunicorn app:app --bind 0.0.0.0:$PORT\n"
     write_project_file(pid, "Procfile", proc)
     files["Procfile"] = {"size": len(proc)}
@@ -601,38 +622,80 @@ def view_project(pid):
 @app.route("/p/<pid>/upload", methods=["POST"])
 @login_required
 def upload_file(pid):
+    """Upload one or many files from device, and/or save pasted text."""
     meta = load_meta(pid)
     if not meta or meta.get("owner") != session["user"]["email"]:
         abort(403)
     plan, _ = user_plan(session["user"]["email"])
     limits = PLAN_LIMITS.get(plan) or PLAN_LIMITS["free"]
-    if len(meta.get("files") or {}) >= limits["files"]:
-        flash("ដល់ដែនកំណត់ files", "error")
-        return redirect(url_for("view_project", pid=pid))
-    rel = request.form.get("path") or request.form.get("filename") or ""
+    max_files = limits["files"]
+    max_file = limits["max_file"]
+    saved = []
+    errors = []
+
+    def save_one(rel: str, body: str):
+        rel = safe_name(rel)
+        if not rel:
+            errors.append("ឈ្មោះ file មិនត្រឹមត្រូវ")
+            return
+        if len(meta.get("files") or {}) + (0 if rel in (meta.get("files") or {}) else 1) > max_files:
+            errors.append(f"ដល់ដែនកំណត់ files ({max_files})")
+            return
+        if len(body.encode("utf-8", errors="replace")) > max_file:
+            errors.append(f"{rel}: ធំពេក (max {max_file} bytes)")
+            return
+        info = {"size": len(body)}
+        if rel.endswith(".py"):
+            ok, err = syntax_check_python(body)
+            info["syntax_ok"] = ok
+            info["syntax_error"] = err
+        write_project_file(pid, rel, body)
+        meta.setdefault("files", {})[rel] = info
+        saved.append(rel)
+
+    # 1) Multi file upload from <input type=file multiple>
+    uploads = request.files.getlist("files") or []
+    single = request.files.get("file")
+    if single and single.filename and single not in uploads:
+        uploads.append(single)
+
+    for f in uploads:
+        if not f or not f.filename:
+            continue
+        # keep relative name only (no path traversal)
+        name = Path(f.filename).name
+        raw = f.read()
+        if len(raw) > max_file:
+            errors.append(f"{name}: ធំពេក")
+            continue
+        try:
+            body = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            body = raw.decode("utf-8", errors="replace")
+            # skip obvious binary
+            if "\x00" in body[:2000]:
+                errors.append(f"{name}: binary មិនទទួល (text តែ)")
+                continue
+        save_one(name, body)
+
+    # 2) Optional paste path + content
+    rel = (request.form.get("path") or request.form.get("filename") or "").strip()
     body = request.form.get("content")
-    f = request.files.get("file")
-    if f and f.filename:
-        rel = rel or f.filename
-        body = f.read().decode("utf-8", errors="replace")
-    if not rel or body is None:
-        flash("ត្រូវ filename + content", "error")
+    if rel and body is not None and body != "":
+        save_one(rel, body)
+
+    if not saved and not errors:
+        flash("រើស file ឬបញ្ចូល path + content", "error")
         return redirect(url_for("view_project", pid=pid))
-    rel = safe_name(rel)
-    if len(body) > limits["max_file"]:
-        flash("File ធំពេក", "error")
-        return redirect(url_for("view_project", pid=pid))
-    info = {"size": len(body)}
-    if rel.endswith(".py"):
-        ok, err = syntax_check_python(body)
-        info["syntax_ok"] = ok
-        info["syntax_error"] = err
-    write_project_file(pid, rel, body)
-    meta.setdefault("files", {})[rel] = info
+
     meta["updated"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     save_meta(meta)
-    flash(f"រក្សាទុក {rel}", "ok")
-    return redirect(url_for("view_project", pid=pid, file=rel))
+    if saved:
+        flash("Upload: " + ", ".join(saved[:8]) + ("…" if len(saved) > 8 else ""), "ok")
+    for e in errors[:5]:
+        flash(e, "error")
+    last = saved[-1] if saved else None
+    return redirect(url_for("view_project", pid=pid, file=last) if last else url_for("view_project", pid=pid))
 
 
 @app.post("/p/<pid>/delete-file")
