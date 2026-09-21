@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}My projects — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-extrabold">My projects</h1>
+    <a href="{{ url_for('new_project') }}" class="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-bold">+ New</a>
+  </div>
+  <div class="space-y-2">
+    {% for p in projects %}
+    <a href="{{ url_for('view_project', pid=p.id) }}" class="block bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+      <div class="font-bold">{{ p.title }} {% if p.private %}<span class="text-xs text-amber-400">private</span>{% endif %}</div>
+      <div class="text-xs text-slate-500">{{ p.file_count }} files</div>
+    </a>
+    {% else %}
+    <p class="text-slate-500">មិនទាន់មាន · <a href="{{ url_for('new_project') }}" class="text-blue-400 font-semibold">Create</a></p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

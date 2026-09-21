@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-6">
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+    <div>
+      <h1 class="text-xl font-extrabold">{{ meta.title }}</h1>
+      <p class="text-sm text-slate-500 mt-1">{{ meta.description }}</p>
+      <p class="text-xs text-slate-600 mt-1">
+        {{ meta.owner }} · {{ meta.updated or meta.created }} · {{ meta.views }} views
+        {% if meta.private %}<span class="text-amber-400">· private</span>{% endif %}
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{{ url_for('download_zip', pid=meta.id) }}" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-500 text-white">Download ZIP</a>
+      <button type="button" onclick="navigator.clipboard.writeText(location.href.split('?')[0])" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800">Copy link</button>
+      <a href="{{ url_for('check_project', pid=meta.id) }}" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800" target="_blank">Syntax check JSON</a>
+      {% if user and meta.owner == user.email %}
+      <form method="post" action="{{ url_for('delete_project', pid=meta.id) }}" onsubmit="return confirm('លុប project?')">
+        <button class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/20 text-red-300">Delete</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-4 gap-4">
+    <aside class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-3">
+      <div class="text-xs font-bold text-slate-500 mb-2">FILES</div>
+      <ul class="space-y-1 text-sm">
+        {% for f in files %}
+        <li>
+          <a href="{{ url_for('view_project', pid=meta.id, file=f) }}"
+             class="block px-2 py-1.5 rounded-lg {% if f==current %}bg-blue-500/20 text-blue-300{% else %}hover:bg-slate-800 text-slate-300{% endif %}">
+            {{ f }}
+            {% set info = meta.files.get(f, {}) %}
+            {% if info.get('syntax_ok') == False %}<span class="text-red-400">!</span>{% elif info.get('syntax_ok') %}<span class="text-emerald-400">✓</span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if user and meta.owner == user.email %}
+      <form method="post" action="{{ url_for('upload_file', pid=meta.id) }}" class="mt-4 space-y-2 border-t border-slate-800 pt-3">
+        <div class="text-xs font-bold text-slate-500">Add / update file</div>
+        <input name="path" placeholder="path e.g. utils.py" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs" required />
+        <textarea name="content" rows="4" placeholder="code..." class="mono w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs" required></textarea>
+        <button class="w-full py-1.5 rounded-lg bg-blue-500 text-white text-xs font-bold">Save file</button>
+      </form>
+      {% endif %}
+    </aside>
+    <section class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      <div class="px-4 py-2 border-b border-slate-800 flex justify-between text-xs text-slate-500">
+        <span>{{ current or '—' }}</span>
+        {% if current %}
+        <a href="{{ url_for('raw_file', pid=meta.id, filepath=current) }}" class="hover:text-white">Raw</a>
+        {% endif %}
+      </div>
+      {% if current and current.endswith('.py') and meta.files.get(current, {}).get('syntax_ok') == False %}
+      <div class="px-4 py-2 bg-red-500/10 text-red-300 text-xs border-b border-red-500/20">
+        Syntax: {{ meta.files[current].syntax_error }}
+      </div>
+      {% endif %}
+      <pre class="p-4 overflow-x-auto text-sm leading-relaxed"><code class="language-{{ 'python' if current and current.endswith('.py') else 'plaintext' }}">{{ content }}</code></pre>
+    </section>
+  </div>
+
+  <div class="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm text-slate-400">
+    <b class="text-slate-200">Deploy project នេះលើ Render</b>
+    <ol class="list-decimal ml-5 mt-2 space-y-1 text-xs">
+      <li>Download ZIP</li>
+      <li>Upload ទៅ GitHub</li>
+      <li>Render → Web Service → build <code class="text-blue-300">pip install -r requirements.txt</code> · start <code class="text-blue-300">gunicorn app:app --bind 0.0.0.0:$PORT</code></li>
+    </ol>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>hljs.highlightAll();</script>{% endblock %}

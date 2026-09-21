@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Sign up — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-12">
+  <form method="post" class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+    <h1 class="text-xl font-extrabold mb-4">Sign up</h1>
+    {% if error %}<div class="text-sm text-red-300 mb-3">{{ error }}</div>{% endif %}
+    <input type="text" name="name" placeholder="Name" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 mb-3 text-sm" />
+    <input type="email" name="email" required placeholder="Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 mb-3 text-sm" />
+    <input type="password" name="password" required minlength="4" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 mb-4 text-sm" />
+    <button class="w-full py-2.5 rounded-xl bg-blue-500 text-white font-bold text-sm">Create account</button>
+  </form>
+</div>
+{% endblock %}

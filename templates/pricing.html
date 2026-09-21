@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Pricing — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-10">
+  <div class="flex justify-center mb-3">
+    <img src="{{ url_for('static', filename='img/logo-mark.svg') }}" alt="" class="w-12 h-12 rounded-xl" width="48" height="48" />
+  </div>
+  <h1 class="text-3xl font-black text-center mb-2">Plans</h1>
+  <p class="text-center text-slate-400 text-sm mb-8">
+    Free សាក <b class="text-amber-400">{{ trial_minutes }} នាទី</b> — <b class="text-red-300">ផុតពេលត្រូវបង់លុយ</b> ទើបប្រើបន្ត
+  </p>
+  {% if user and free_trial_left is not none %}
+  <div class="mb-6 text-center text-sm {% if free_trial_left <= 0 %}text-red-300{% else %}text-amber-300{% endif %}">
+    {% if free_trial_left <= 0 %}
+      ផុត ១៥ នាទីហើយ — ត្រូវជ្រើស plan បង់លុយ (Starter / Pro / Business)
+    {% else %}
+      នៅសល់ ~{{ (free_trial_left // 60) }} នាទី {{ free_trial_left % 60 }} វិនាទី
+    {% endif %}
+  </div>
+  {% endif %}
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {% for p in plans %}
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col {% if p.id=='pro' %}ring-2 ring-blue-500{% endif %}">
+      <div class="text-xs font-bold text-slate-500 uppercase">{{ p.name }}</div>
+      <div class="text-2xl font-black mt-1">{{ p.price }}</div>
+      <p class="text-xs text-slate-400 mt-1 mb-3">{{ p.desc }}</p>
+      <ul class="text-xs text-slate-400 space-y-1 flex-1 mb-4">
+        {% for f in p.features %}
+        <li>✓ {{ f }}</li>
+        {% endfor %}
+      </ul>
+      {% if p.id == 'free' %}
+      <a href="{{ url_for('register') }}" class="block text-center py-2 rounded-xl bg-slate-800 text-sm font-bold">ចាប់ផ្តើម Free</a>
+      {% elif user %}
+      <form method="post" action="{{ url_for('upgrade_plan') }}">
+        <input type="hidden" name="plan" value="{{ p.id }}" />
+        <button class="w-full py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold">បង់លុយ {{ p.name }}</button>
+      </form>
+      {% if allow_demo %}
+      <form method="post" action="{{ url_for('upgrade_plan') }}" class="mt-1">
+        <input type="hidden" name="plan" value="{{ p.id }}" />
+        <input type="hidden" name="demo" value="1" />
+        <button class="w-full py-1.5 rounded-xl bg-slate-800 text-slate-400 text-[10px] font-bold">Demo only</button>
+      </form>
+      {% endif %}
+      <p class="text-[10px] text-slate-600 mt-2 text-center">KHQR តាម KHPAY</p>
+      {% else %}
+      <a href="{{ url_for('login') }}" class="block text-center py-2 rounded-xl bg-blue-500 text-white text-sm font-bold">Login ដើម្បីជាវ</a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

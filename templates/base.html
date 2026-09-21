@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="{{ app_name }} — Host Python projects, syntax check, export deploy" />
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { yellow: '#FACC15', blue: '#3B82F6', cyan: '#06B6D4', ink: '#0B1220' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Khmer', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    body{font-family:Inter,"Noto Sans Khmer",system-ui,sans-serif}
+    .mono,pre,code,textarea.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+    .hljs{background:transparent!important;padding:0!important}
+    .icon{width:1.1rem;height:1.1rem;display:inline-block;vertical-align:-0.15em;flex-shrink:0}
+    .icon-sm{width:0.95rem;height:0.95rem}
+    .icon-lg{width:1.35rem;height:1.35rem}
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+  <header class="border-b border-slate-800/80 bg-slate-950/90 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
+      <a href="{{ url_for('index') }}" class="font-extrabold flex items-center gap-2.5 tracking-tight group">
+        <img src="{{ url_for('static', filename='img/logo-mark.svg') }}" alt="{{ app_name }}" class="w-8 h-8 rounded-lg shadow-lg shadow-blue-500/20 group-hover:scale-105 transition" width="32" height="32" />
+        <span class="text-[15px]">{{ app_name }}</span>
+      </a>
+      <nav class="flex items-center gap-0.5 text-sm font-semibold text-slate-400">
+        <a href="{{ url_for('index') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 hover:text-white transition">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>
+          <span class="hidden sm:inline">Home</span>
+        </a>
+        <a href="{{ url_for('explore') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 hover:text-white transition">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 6.5L7 17l2.5-6.5L16 8z"/></svg>
+          <span class="hidden sm:inline">Explore</span>
+        </a>
+        <a href="{{ url_for('pricing') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 hover:text-white transition">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M8 7h5.5a3 3 0 0 1 0 6H8m0 0h6a3 3 0 0 1 0 6H8"/></svg>
+          <span class="hidden sm:inline">Pricing</span>
+        </a>
+        {% if user %}
+        {% if free_trial_left is not none and user_plan_name in ('free','expired') %}
+        <span class="hidden md:inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg {% if free_trial_left <= 0 %}bg-red-500/15 text-red-300 ring-1 ring-red-500/30{% else %}bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/30{% endif %}">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          {% if free_trial_left <= 0 %}អស់{% else %}{{ free_trial_left // 60 }}:{{ '%02d' % (free_trial_left % 60) }}{% endif %}
+        </span>
+        {% endif %}
+        <a href="{{ url_for('new_project') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-400 transition shadow-md shadow-blue-500/25">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="hidden sm:inline">Project</span>
+        </a>
+        <a href="{{ url_for('mine') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 hover:text-white transition">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16M6 20V9l6-4 6 4v11"/><path d="M9 20v-6h6v6"/></svg>
+          <span class="hidden sm:inline">Mine</span>
+        </a>
+        <a href="{{ url_for('logout') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 hover:text-white transition" title="Logout">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 7V5a2 2 0 0 1 2-2h7v18h-7a2 2 0 0 1-2-2v-2"/><path d="M15 12H3m0 0 3-3m-3 3 3 3"/></svg>
+        </a>
+        {% else %}
+        <a href="{{ url_for('login') }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-800/80 hover:text-white transition">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>
+          <span class="hidden sm:inline">Login</span>
+        </a>
+        <a href="{{ url_for('register') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-400 transition shadow-md shadow-blue-500/25">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+          <span class="hidden sm:inline">Sign up</span>
+        </a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="max-w-6xl mx-auto px-4 pt-3 w-full space-y-2">
+    {% for cat, msg in messages %}
+    <div class="text-sm rounded-xl px-4 py-2.5 flex items-start gap-2 {% if cat=='error' %}bg-red-500/10 text-red-300 ring-1 ring-red-500/25{% else %}bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/25{% endif %}">
+      {% if cat=='error' %}
+      <svg class="icon mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      {% else %}
+      <svg class="icon mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+      {% endif %}
+      <span>{{ msg }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <main class="flex-1">{% block content %}{% endblock %}</main>
+
+  <footer class="border-t border-slate-800/80 mt-auto">
+    <div class="max-w-6xl mx-auto px-4 py-8 grid sm:grid-cols-3 gap-6 text-sm text-slate-500">
+      <div>
+        <div class="flex items-center gap-2 text-slate-200 font-bold mb-2">
+          <img src="{{ url_for('static', filename='img/logo-mark.svg') }}" alt="" class="w-6 h-6 rounded-md" width="24" height="24" />
+          {{ app_name }}
+        </div>
+        <p class="text-xs leading-relaxed">Host Python projects · syntax check · export ZIP · KHQR billing</p>
+      </div>
+      <div>
+        <div class="text-slate-300 font-semibold text-xs uppercase tracking-wide mb-2">Product</div>
+        <ul class="space-y-1.5 text-xs">
+          <li><a href="{{ url_for('explore') }}" class="hover:text-white">Explore</a></li>
+          <li><a href="{{ url_for('pricing') }}" class="hover:text-white">Pricing</a></li>
+          <li><a href="{{ url_for('register') }}" class="hover:text-white">Sign up</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="text-slate-300 font-semibold text-xs uppercase tracking-wide mb-2">Security</div>
+        <p class="text-xs leading-relaxed">មិន exec code លើ server រួម · Payment verify តាម KHPAY</p>
+      </div>
+    </div>
+    <div class="border-t border-slate-800/60 text-center text-[11px] text-slate-600 py-4">
+      © 2026 {{ app_name }}
+    </div>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Login — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-12">
+  <form method="post" class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+    <h1 class="text-xl font-extrabold mb-4">Login</h1>
+    {% if error %}<div class="text-sm text-red-300 mb-3">{{ error }}</div>{% endif %}
+    <input type="email" name="email" required placeholder="Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 mb-3 text-sm" />
+    <input type="password" name="password" required placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 mb-4 text-sm" />
+    <button class="w-full py-2.5 rounded-xl bg-blue-500 text-white font-bold text-sm">Login</button>
+    <p class="text-center text-sm text-slate-500 mt-4"><a href="{{ url_for('register') }}" class="text-blue-400">Sign up</a></p>
+  </form>
+</div>
+{% endblock %}

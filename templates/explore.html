@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Explore — {{ app_name }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-extrabold mb-6">Explore Python projects</h1>
+  <div class="space-y-2">
+    {% for p in projects %}
+    <a href="{{ url_for('view_project', pid=p.id) }}" class="block bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 hover:border-blue-500/40">
+      <div class="font-bold">{{ p.title }}</div>
+      <div class="text-xs text-slate-500">{{ p.file_count }} files · {{ p.views or 0 }} views · {{ p.created }}</div>
+    </a>
+    {% else %}
+    <p class="text-slate-500">Empty</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
