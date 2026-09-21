@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: pyhost
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+    healthCheckPath: /health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: APP_NAME
+        value: PyHost
+      - key: DATA_DIR
+        value: /var/data
+      - key: FREE_TRIAL_SECONDS
+        value: "900"
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      - key: ALLOW_DEMO_UPGRADE
+        value: "0"
+      - key: REQUIRE_WEBHOOK_SECRET
+        value: "1"
+      - key: KHPAY_API_KEY
+        sync: false
+      - key: KHPAY_BASE
+        value: https://khpay.site/api/v1
+      - key: KHPAY_WEBHOOK_SECRET
+        sync: false
