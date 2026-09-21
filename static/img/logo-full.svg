@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40" fill="none">
+  <defs>
+    <linearGradient id="py" x1="6" y1="4" x2="30" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3776AB"/><stop offset="1" stop-color="#FFD43B"/>
+    </linearGradient>
+  </defs>
+  <rect width="40" height="40" rx="10" fill="#0B1220"/>
+  <text x="20" y="27" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="16" fill="url(#py)">Py</text>
+  <text x="52" y="27" font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="18" fill="#F1F5F9">PyHost</text>
+</svg>
