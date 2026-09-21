@@ -12,9 +12,11 @@
       </p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <a href="{{ url_for('download_zip', pid=meta.id) }}" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-500 text-white">Download ZIP</a>
+      <a href="{{ url_for('download_zip', pid=meta.id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-500 text-white">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+        Download ZIP
+      </a>
       <button type="button" onclick="navigator.clipboard.writeText(location.href.split('?')[0])" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800">Copy link</button>
-      <a href="{{ url_for('check_project', pid=meta.id) }}" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800" target="_blank">Syntax check JSON</a>
       {% if user and meta.owner == user.email %}
       <form method="post" action="{{ url_for('delete_project', pid=meta.id) }}" onsubmit="return confirm('លុប project?')">
         <button class="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/20 text-red-300">Delete</button>
@@ -24,29 +26,56 @@
   </div>
 
   <div class="grid lg:grid-cols-4 gap-4">
-    <aside class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-3">
-      <div class="text-xs font-bold text-slate-500 mb-2">FILES</div>
-      <ul class="space-y-1 text-sm">
+    <aside class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+      <div class="text-xs font-bold text-slate-500 mb-2">Files</div>
+      <ul class="space-y-1 text-sm max-h-64 overflow-y-auto">
         {% for f in files %}
-        <li>
+        <li class="flex items-center gap-1">
           <a href="{{ url_for('view_project', pid=meta.id, file=f) }}"
-             class="block px-2 py-1.5 rounded-lg {% if f==current %}bg-blue-500/20 text-blue-300{% else %}hover:bg-slate-800 text-slate-300{% endif %}">
+             class="flex-1 truncate px-2 py-1 rounded-lg {% if f==current %}bg-blue-500/20 text-blue-300{% else %}hover:bg-slate-800{% endif %}">
             {{ f }}
             {% set info = meta.files.get(f, {}) %}
             {% if info.get('syntax_ok') == False %}<span class="text-red-400">!</span>{% elif info.get('syntax_ok') %}<span class="text-emerald-400">✓</span>{% endif %}
           </a>
+          {% if user and meta.owner == user.email %}
+          <form method="post" action="{{ url_for('delete_file', pid=meta.id) }}" onsubmit="return confirm('លុប {{ f }}?')">
+            <input type="hidden" name="path" value="{{ f }}" />
+            <button class="text-slate-600 hover:text-red-400 text-xs px-1" title="Delete">×</button>
+          </form>
+          {% endif %}
         </li>
+        {% else %}
+        <li class="text-slate-600 text-xs px-2">មិនទាន់មាន file</li>
         {% endfor %}
       </ul>
+
       {% if user and meta.owner == user.email %}
-      <form method="post" action="{{ url_for('upload_file', pid=meta.id) }}" class="mt-4 space-y-2 border-t border-slate-800 pt-3">
-        <div class="text-xs font-bold text-slate-500">Add / update file</div>
-        <input name="path" placeholder="path e.g. utils.py" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs" required />
-        <textarea name="content" rows="4" placeholder="code..." class="mono w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs" required></textarea>
-        <button class="w-full py-1.5 rounded-lg bg-blue-500 text-white text-xs font-bold">Save file</button>
+      <form method="post" action="{{ url_for('upload_file', pid=meta.id) }}" enctype="multipart/form-data" class="mt-4 space-y-3 border-t border-slate-800 pt-3">
+        <div class="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0 4 4m-4-4-4 4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+          Upload files
+        </div>
+        <label class="block cursor-pointer">
+          <span class="flex flex-col items-center justify-center gap-2 border border-dashed border-slate-600 hover:border-blue-500/50 rounded-xl px-3 py-5 bg-slate-950/50 transition">
+            <svg class="w-8 h-8 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 18a4.5 4.5 0 0 1 0-9 5.5 5.5 0 0 1 10.7 1.5A3.5 3.5 0 0 1 18 17.5"/><path d="M12 12v6m0 0 2.5-2.5M12 18l-2.5-2.5"/></svg>
+            <span class="text-[11px] text-slate-400 text-center">ចុច ឬទាញ file មកទីនេះ<br/><span class="text-slate-600">.py .txt .md .json … (ច្រើនបាន)</span></span>
+            <input type="file" name="files" multiple accept=".py,.txt,.md,.json,.toml,.yml,.yaml,.html,.css,.js,.cfg,.ini,.env,text/*" class="text-[11px] w-full text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white file:text-xs file:font-bold" />
+          </span>
+        </label>
+        <button type="submit" class="w-full py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold">Upload</button>
+
+        <details class="text-xs text-slate-500">
+          <summary class="cursor-pointer hover:text-slate-300">ឬវាយ code ដោយដៃ</summary>
+          <div class="mt-2 space-y-2">
+            <input name="path" placeholder="path e.g. utils.py" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs" />
+            <textarea name="content" rows="4" placeholder="paste code..." class="mono w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs"></textarea>
+            <button type="submit" class="w-full py-1.5 rounded-lg bg-slate-800 text-xs font-bold">Save text</button>
+          </div>
+        </details>
       </form>
       {% endif %}
     </aside>
+
     <section class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
       <div class="px-4 py-2 border-b border-slate-800 flex justify-between text-xs text-slate-500">
         <span>{{ current or '—' }}</span>
@@ -68,7 +97,7 @@
     <ol class="list-decimal ml-5 mt-2 space-y-1 text-xs">
       <li>Download ZIP</li>
       <li>Upload ទៅ GitHub</li>
-      <li>Render → Web Service → build <code class="text-blue-300">pip install -r requirements.txt</code> · start <code class="text-blue-300">gunicorn app:app --bind 0.0.0.0:$PORT</code></li>
+      <li>Render → build <code class="text-blue-300">pip install -r requirements.txt</code> · start <code class="text-blue-300">gunicorn app:app --bind 0.0.0.0:$PORT</code></li>
     </ol>
   </div>
 </div>

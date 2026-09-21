@@ -1,39 +1,37 @@
 {% extends "base.html" %}
 {% block title %}New project — {{ app_name }}{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 py-8">
-  <h1 class="text-2xl font-extrabold mb-6">New Python Project</h1>
-  <form method="post" class="space-y-4">
+<div class="max-w-xl mx-auto px-4 py-10">
+  <h1 class="text-2xl font-extrabold mb-6">New project</h1>
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
     <div>
       <label class="text-xs font-semibold text-slate-400">Title</label>
-      <input name="title" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm" placeholder="My Flask App" required />
+      <input name="title" required maxlength="100" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm" placeholder="My Flask app" />
     </div>
     <div>
       <label class="text-xs font-semibold text-slate-400">Description</label>
-      <input name="description" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm" placeholder="ខ្លីៗ..." />
+      <textarea name="description" rows="2" maxlength="500" class="mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm" placeholder="ខ្លីៗ…"></textarea>
     </div>
+    <label class="flex items-center gap-2 text-sm text-slate-400">
+      <input type="checkbox" name="private" value="1" class="rounded border-slate-600" /> Private project
+    </label>
+
+    <div class="border border-slate-800 rounded-2xl p-4 space-y-3">
+      <div class="text-xs font-bold text-slate-400">Upload files (optional)</div>
+      <input type="file" name="files" multiple accept=".py,.txt,.md,.json,.toml,.yml,.yaml,.html,.css,.js,.cfg,.ini,text/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-500 file:text-white file:text-xs file:font-bold" />
+      <p class="text-[11px] text-slate-600">អាចរើសច្រើន file · ឬបំពេញ app.py ខាងក្រោម</p>
+    </div>
+
     <div>
-      <label class="text-xs font-semibold text-slate-400">app.py (optional — បន្ថែម file ក្រោយបាន)</label>
-      <textarea name="main_code" rows="14" class="mono w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm" placeholder="from flask import Flask
-app = Flask(__name__)
-
-@app.get('/')
-def home():
-    return 'Hello from PyHost'
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
-"></textarea>
+      <label class="text-xs font-semibold text-slate-400">app.py (optional — paste)</label>
+      <textarea name="main_code" rows="8" class="mono mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs" placeholder="from flask import Flask&#10;app = Flask(__name__)&#10;..."></textarea>
     </div>
     <div>
       <label class="text-xs font-semibold text-slate-400">requirements.txt</label>
-      <textarea name="requirements" rows="3" class="mono w-full mt-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm">Flask>=3.0.0
+      <textarea name="requirements" rows="3" class="mono mt-1 w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs">Flask>=3.0.0
 gunicorn>=21.0.0</textarea>
     </div>
-    <label class="flex items-center gap-2 text-sm text-slate-400">
-      <input type="checkbox" name="private" value="1" /> Private project
-    </label>
-    <button class="px-6 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm">Create project</button>
+    <button class="w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm">Create project</button>
   </form>
 </div>
 {% endblock %}
